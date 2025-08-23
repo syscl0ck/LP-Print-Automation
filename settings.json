@@ -1,0 +1,10 @@
+{
+  "BASEDIR": "C:/Users/isaac/Desktop/LP-Print-Automation/sample-xlsx",
+  "TMP_PATH": "C:/Users/isaac/Desktop/LP-Print-Automation/tmp/",
+  "COPY_PATH": "C:/Users/amomanyi/Desktop/2025-004/tmp.xlsx",
+  "POLL_DELAY_SECONDS": 1,
+  "PRINT_METHOD": "excel",
+  "PRINT_METHOD_2": "system",
+  "LOGFILE": "prod.log",
+  "DEBUG": true
+}

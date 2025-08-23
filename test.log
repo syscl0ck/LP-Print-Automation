@@ -1,0 +1,22 @@
+[+] Logfile loaded at test.log
+[+] Checking file permissions...
+[+] Logfile loaded at test.log
+[+] Checking file permissions...
+Exists? False
+Readable? False
+Writable? False
+Executable? False
+[+] Logfile loaded at test.log
+[+] Checking file permissions...
+Exists? True
+Readable? True
+Writable? True
+Executable? True
+Stat: os.stat_result(st_mode=33206, st_ino=3377699720820671, st_dev=2763335823, st_nlink=1, st_uid=0, st_gid=0, st_size=14, st_atime=1754381635, st_mtime=1754381634, st_ctime=1754381634)
+[+] Logfile loaded at test.log
+[+] Checking file permissions...
+Exists? True
+Readable? True
+Writable? True
+Executable? True
+Stat: os.stat_result(st_mode=33206, st_ino=3377699720820671, st_dev=2763335823, st_nlink=1, st_uid=0, st_gid=0, st_size=14, st_atime=1754381635, st_mtime=1754381634, st_ctime=1754381634)
