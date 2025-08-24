@@ -1,0 +1,56 @@
+name: PR CI
+
+on:
+  pull_request:
+    # Fire when a PR is opened, updated (new commits), re-opened, or marked ready
+    types: [opened, synchronize, reopened, ready_for_review]
+    # Only when targeting main (adjust as needed)
+    branches: [ main ]
+    # Optional: only run when relevant files change
+    # paths: [ "src/**", ".github/workflows/**" ]
+
+permissions:
+  contents: read        # least-privilege default
+  pull-requests: write  # only if you want to comment on the PR, otherwise remove
+
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    # Skip draft PRs (remove if you want drafts to run)
+    if: ${{ github.event.pull_request.draft == false }}
+
+    # Target your self-hosted runner by labels (and optionally group)
+    # Option A: labels only
+    runs-on: [self-hosted, ci]
+    # Option B (if you use runner groups), uncomment and set your group:
+    # runs-on:
+    #   group: my-self-hosted-group
+    #   labels: [self-hosted, ci]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Example: Node project (adjust for your stack)
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install
+        run: npm ci
+
+      - name: Test
+        run: npm test --if-present
+
+      - name: Upload test reports (optional)
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: reports/**
