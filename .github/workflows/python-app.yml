@@ -4,18 +4,13 @@
 name: Python application
 
 on:
-  push:
-    branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-
-permissions:
-  contents: read
 
 jobs:
   build:
 
-    runs-on: [self-hosted, Windows]
+    runs-on: [self-hosted]
 
     steps:
     - uses: actions/checkout@v4
