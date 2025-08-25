@@ -51,6 +51,6 @@ The PRINT_METHOD and PRINT_METHOD_2 options allow you to switch between using Ex
 
 LOGFILE defines the logfile path, which is in the same directory as the executable by default.
 
-# Advanced Installations
+# Running in the Background
 
 If you would like to set up this project so that it runs entirely in the background, with a service account, check out this article by our developer at: https://mtiron.tech/posts/excel-automation-windows
