@@ -6,7 +6,7 @@ import tempfile
 from pathlib import Path
 import shutil
 import stat
-from logging import Logger, INFO
+from logging import Logger, INFO, basicConfig, Formatter
 from logging.handlers import RotatingFileHandler
 import win32com.client as win32
 from threading import Thread
@@ -15,7 +15,6 @@ from watchdog.observers.polling import PollingObserver as Observer
 from watchdog.events import FileSystemEventHandler
 from uuid import uuid4
 import pythoncom
-
 
 ##################################################################
 # Created by Mountain Iron Technology LLC for Heliene USA
@@ -31,10 +30,14 @@ with open('settings.json') as config_file:
 	conf = json.load(config_file)
 
 logger = Logger(__name__)
-logger.setLevel(INFO)
-handler = RotatingFileHandler(os.path.join(os.getcwd(),conf['LOGFILE']), maxBytes=1024*1024, backupCount=5)
+LOGFILE = os.path.join(os.getcwd(),conf['LOGFILE'])
+handler = RotatingFileHandler(LOGFILE, maxBytes=1024*1024, backupCount=5)
+handler.setLevel(INFO)
+# Include timestamp and logging level in logs
+handler.setFormatter(Formatter('%(asctime)s - %(levelname)s - %(message)s'))
 logger.addHandler(handler)
 logger.info(f'[+] Logfile loaded at {conf["LOGFILE"]}')
+
 
 COPY_PATH = os.path.join(os.getcwd(),conf['COPY_PATH'])
 
@@ -120,14 +123,7 @@ def process_document():
             raise FileNotFoundError
 
         logger.info(f'[+] Newest file found at {newest_file_path}')
-        # safe_temp_dir = os.path.expanduser(TMP_PATH)
-        # os.makedirs(safe_temp_dir, exist_ok=True)
 
-        # temp_xlsx_path = os.path.join(safe_temp_dir, str(uuid4()) + ".xlsx")
-        # logger.info(f'[+] Creating temporary file at {temp_xlsx_path}')
-        # temp_xlsx_path = os.path.join(temp_file_path)
-        # shutil.copy(newest_file_path, temp_xlsx_path)
-        # os.close(temp_xlsx_path)  # close the file descriptor immediately to avoid locking issues
         temp_xlsx_path = tempfile.NamedTemporaryFile(suffix='.xlsx', delete=False).name
         
         logger.info(f'[+] Copying newest content to temporary file...')
@@ -142,9 +138,15 @@ def process_document():
         logger.info(f"Stat: {os.stat(temp_xlsx_path)}")
 
         abs_path = os.path.abspath(temp_xlsx_path)
-        
+    except Exception as e:
+        logger.error('Could not open file:')
+        logger.error(e)
+    try: 
         pythoncom.CoInitialize()
-        excel = win32.gencache.EnsureDispatch('Excel.Application')
+        try:
+            excel = win32.gencache.EnsureDispatch('Excel.Application')
+        except Exception:
+             excel = win32.Dispatch('Excel.Application')
 
         excel.Visible = False
         excel.DisplayAlerts = False
@@ -154,7 +156,10 @@ def process_document():
         wb = excel.Workbooks.Open(abs_path)
 
         wb.RefreshAll()
-        excel.CalculateFull()
+        try:
+            excel.CalculateFull()
+        except Exception:
+            pass
 
         # Fix the formatting
         sheet = wb.Sheets("Pallet")
@@ -203,26 +208,35 @@ def process_document():
             )
             os.startfile(TMP_PATH, "print")
             os.startfile(TMP_PATH, "print")
+        logger.info("File sent to printer successfully. Check the print queue.")
     except Exception as e:
         logger.error(e)
     finally:
         logger.info(f'[+] Closing WorkBook')
         try:
-            wb.Close(False)
-            excel.Quit()
+            if wb is not None:
+                wb.Close(SaveChanges=False)
         except:
             pass
+        try:
+             if excel is not None:
+                excel.Quit()
+        except Exception:
+            pass
+        pythoncom.CoUninitialize()
+        # Remove temporary files if the system did not already.
         try:
             if os.path.exists(temp_xlsx_path):
                 os.remove(temp_xlsx_path)
         except Exception as e:
+            logger.error('Unable to remove temporary file.')
             logger.error(e)
+            logger.error('Temp file will be deleted on reboot instead.')
             sleep(5)
-        pythoncom.CoUninitialize()
 
 def main():
     # TODO: Ensure that once a second is fast enough
-    print('[+] Starting')
+    print('[+] Starting automatic printing for Palletizer...')
     logger.info('[+] Started')
 
     path_to_watch = BASEDIR
